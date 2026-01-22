@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Crypto Change - Officiel</title>
+  <style>
+    :root { --p: #1a237e; --s: #e67e22; --bg: #f4f7f9; }
+    body { font-family: system-ui, Arial, sans-serif; background: var(--bg); margin: 0; padding: 10px; }
+    .card { max-width: 520px; margin: 24px auto; background: white; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); overflow: hidden; }
+    .h { background: var(--p); color: white; padding: 18px; text-align: center; }
+    .tabs { display: flex; background: #eee; }
+    .t { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-weight: 700; color: #666; }
+    .act-b { background: var(--p); color: white; }
+    .act-s { background: var(--s); color: white; }
+    .cnt { padding: 20px; }
+    label { display: block; margin-top: 12px; font-weight: 700; font-size: 13px; color: #333; }
+    input, select { width: 100%; padding: 10px; margin-top: 8px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+    .res { margin-top: 16px; padding: 12px; border-radius: 8px; text-align: center; font-weight: 700; background: #f8f9fa; border-left: 5px solid var(--p); }
+    .res.s { border-left-color: var(--s); }
+    .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; margin-top: 16px; font-size: 15px; font-weight: 700; cursor: pointer; color: white; }
+    .btn-b { background: var(--p); }
+    .btn-s { background: var(--s); }
+    .err { color: #b00020; font-size: 13px; display: none; margin-top: 8px; text-align: center; }
+    .info { color: #333; font-size: 13px; margin-top: 8px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Crypto Change">
+    <div class="h"><h2 style="margin:0">Crypto Change</h2></div>
+
+    <div class="tabs" role="tablist" aria-label="Mode">
+      <div id="tb" class="t act-b" role="tab" aria-selected="true" tabindex="0" onclick="sw('b')">ACHETER</div>
+      <div id="ts" class="t" role="tab" aria-selected="false" tabindex="0" onclick="sw('s')">VENDRE</div>
+    </div>
+
+    <div class="cnt">
+      <!-- ACHETER -->
+      <div id="ab" aria-hidden="false">
+        <label for="bc">CRYPTO À RECEVOIR</label>
+        <select id="bc" onchange="cb()">
+          <option value="180">Tron (TRX) - 180F</option>
+          <option value="600">USDT (TRC20) - 600F</option>
+          <option value="584500">BNB (BEP20) - 584500F</option>
+          <option value="2061000">Ethereum - 2061000F</option>
+          <option value="47000000">Bitcoin - 47000000F</option>
+        </select>
+
+        <label for="wa">ADRESSE DE RÉCEPTION</label>
+        <input id="wa" type="text" placeholder="Collez votre adresse ici" aria-required="true">
+
+        <label for="fi">MONTANT EN FCFA</label>
+        <input id="fi" type="number" placeholder="Ex: 5000" oninput="cb()" min="1" step="1">
+
+        <div class="res">Estimation : <span id="rb">0.00</span></div>
+        <p id="eb" class="err">Minimum 5 unités requis.</p>
+        <p id="info-b" class="info"></p>
+        <button id="bb" class="btn btn-b" onclick="goL()">Continuer l'achat</button>
+      </div>
+
+      <!-- VENDRE -->
+      <div id="as" style="display:none;" aria-hidden="true">
+        <label for="sc">CRYPTO À VENDRE</label>
+        <select id="sc" onchange="cs()">
+          <option value="170">Tron (TRX) - 170F</option>
+          <option value="580">USDT (TRC20) - 580F</option>
+          <option value="570000">BNB (BEP20) - 570000F</option>
+          <option value="2000000">Ethereum - 2000000F</option>
+          <option value="46000000">Bitcoin - 46000000F</option>
+        </select>
+
+        <label for="qi">QUANTITÉ À ENVOYER</label>
+        <input id="qi" type="number" placeholder="Ex: 10" oninput="cs()" min="0.000001" step="any">
+
+        <label for="ph">NUMÉRO MOBILE MONEY (Réception CFA)</label>
+        <input id="ph" type="tel" placeholder="Ex: 06765856">
+
+        <div class="res s">Reçoit : <span id="rs">0</span> FCFA</div>
+        <p id="es" class="err">Minimum 5 unités requis.</p>
+        <p id="info-s" class="info"></p>
+        <button id="bs" class="btn btn-s" onclick="goC()">Valider la vente</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  function sw(m){
+    document.getElementById('ab').style.display = (m==='b' ? 'block' : 'none');
+    document.getElementById('as').style.display = (m==='s' ? 'block' : 'none');
+    document.getElementById('tb').className = 't ' + (m==='b' ? 'act-b' : '');
+    document.getElementById('ts').className = 't ' + (m==='s' ? 'act-s' : '');
+    document.getElementById('ab').setAttribute('aria-hidden', m!=='b');
+    document.getElementById('as').setAttribute('aria-hidden', m!=='s');
+    document.getElementById('info-b').innerText = '';
+    document.getElementById('info-s').innerText = '';
+  }
+
+  function cb(){
+    const v = parseFloat(document.getElementById('fi').value);
+    const r = parseFloat(document.getElementById('bc').value);
+    if(!v || !r || v <= 0) {
+      document.getElementById('rb').innerText = "0.00";
+      document.getElementById('eb').style.display = 'none';
+      return;
+    }
+    const q = v / r;
+    const disp = r > 1000 ? q.toFixed(6) : q.toFixed(2);
+    document.getElementById('rb').innerText = disp;
+    document.getElementById('eb').style.display = (q < 5 ? 'block' : 'none');
+  }
+
+  function cs(){
+    const q = parseFloat(document.getElementById('qi').value);
+    const r = parseFloat(document.getElementById('sc').value);
+    if(!q || !r || q <= 0) {
+      document.getElementById('rs').innerText = "0";
+      document.getElementById('es').style.display = 'none';
+      return;
+    }
+    document.getElementById('rs').innerText = String(Math.floor(q * r));
+    document.getElementById('es').style.display = (q < 5 ? 'block' : 'none');
+  }
+
+  async function goL() {
+    const f = parseInt(document.getElementById('fi').value, 10);
+    const a = document.getElementById('wa').value.trim();
+    const cryptoLabel = document.getElementById('bc').options[document.getElementById('bc').selectedIndex].text;
+
+    if(!a) return alert("Adresse manquante");
+    if(!f || f < 1) return alert("Montant invalide");
+
+    const rate = parseFloat(document.getElementById('bc').value);
+    const units = f / rate;
+    if(units < 5) return alert("Le montant correspond à moins de 5 unités. Augmentez le montant.");
+
+    document.getElementById('bb').disabled = true;
+    document.getElementById('info-b').innerText = "Création du paiement...";
+
+    try {
+      const resp = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ amount: f, address: a, crypto: cryptoLabel })
+      });
+      const json = await resp.json();
+      if(resp.ok && json.url){
+        window.location.href = json.url;
+      } else {
+        console.error(json);
+        alert(json.error || 'Erreur lors de la création du paiement.');
+        document.getElementById('info-b').innerText = (json.error || 'Erreur serveur');
+      }
+    } catch (err){
+      console.error(err);
+      alert('Erreur réseau. Réessaye plus tard.');
+    } finally {
+      document.getElementById('bb').disabled = false;
+    }
+  }
+
+  async function goC() {
+    const q = document.getElementById('qi').value;
+    const p = document.getElementById('ph').value.trim();
+    const cryptoLabel = document.getElementById('sc').options[document.getElementById('sc').selectedIndex].text;
+
+    if(!q || Number(q) <= 0) return alert("Quantité invalide");
+    if(Number(q) < 5) return alert("Quantité minimale 5 unités.");
+    if(!p) return alert("Numéro Mobile Money manquant.");
+
+    document.getElementById('bs').disabled = true;
+    document.getElementById('info-s').innerText = "Création du paiement de vente...";
+
+    try {
+      const resp = await fetch('/api/cryptomus-pay', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ amount: q, phone: p, crypto: cryptoLabel })
+      });
+      const json = await resp.json();
+      if(resp.ok && json.url){
+        window.location.href = json.url;
+      } else {
+        console.error(json);
+        alert(json.error || 'Erreur lors de la création du paiement.');
+        document.getElementById('info-s').innerText = (json.error || 'Erreur serveur');
+      }
+    } catch(err){
+      console.error(err);
+      alert('Erreur réseau. Réessaye plus tard.');
+    } finally {
+      document.getElementById('bs').disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
